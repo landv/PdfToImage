@@ -1,27 +1,32 @@
 ﻿using PdfiumViewer;
-
 using System;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace PdfToImage
 {
     class Program
 	{
-		static void Main(string[] args)
-		{
-			var projectDir = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.FullName;
 
-			try
+        static void Main(string[] args)
+		{
+
+            Console.Title = Guid.NewGuid().ToString();
+            ConsoleHelper.hideConsole();
+
+            try
 			{
-				using (var document = PdfDocument.Load(projectDir + @"\Samples\input.pdf"))
+				using (var document = PdfDocument.Load(args[0]))
 				{
 					var pageCount = document.PageCount;
 
 					for (int i = 0; i < pageCount; i++)
 					{
-						var dpi = 300;
+						//var dpi = 300;
+						// 图片质量 150就够了
+						var dpi = 150;
 						
 						using (var image = document.Render(i, dpi, dpi, PdfRenderFlags.CorrectFromDpi))
 						{
@@ -29,9 +34,9 @@ namespace PdfToImage
 								.First(c => c.FormatID == ImageFormat.Jpeg.Guid);
 							var encParams = new EncoderParameters(1);
 							encParams.Param[0] = new EncoderParameter(
-								System.Drawing.Imaging.Encoder.Quality, 100L);
+                                Encoder.Quality, 100L);
 
-							image.Save(projectDir + @"\Samples\output_" + i + ".jpg", encoder, encParams);
+							image.Save(Path.GetFileNameWithoutExtension(args[0]) + i + ".png", encoder, encParams);
 						}
 					}
 				}
@@ -40,9 +45,7 @@ namespace PdfToImage
 			{
 				Console.WriteLine(ex.Message);
 			}
-			
-			Console.WriteLine("Press enter to continue...");
-			Console.ReadLine();
+
 		}
 	}
 }
